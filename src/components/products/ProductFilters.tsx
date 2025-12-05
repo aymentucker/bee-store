@@ -1,10 +1,10 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Search } from "lucide-react"
-import { categories } from "@/data/categories"
+import type { Category } from "@/data/categories"
 
 interface ProductFiltersProps {
     onFilterChange: (filters: { category: string; inStock: boolean | null; search: string }) => void;
@@ -12,9 +12,23 @@ interface ProductFiltersProps {
 
 // TEXT CONTENT: Edit filter labels below
 export function ProductFilters({ onFilterChange }: ProductFiltersProps) {
+    const [categories, setCategories] = useState<Category[]>([])
     const [selectedCategory, setSelectedCategory] = useState<string>("all")
     const [selectedStock, setSelectedStock] = useState<string>("all")
     const [searchQuery, setSearchQuery] = useState("")
+
+    useEffect(() => {
+        const loadCategories = async () => {
+            try {
+                const { getCategories } = await import("@/lib/db-utils")
+                const data = await getCategories()
+                setCategories(data)
+            } catch (error) {
+                console.error("Failed to load categories", error)
+            }
+        }
+        loadCategories()
+    }, [])
 
     const handleFilterChange = (category: string, stock: string, search: string) => {
         onFilterChange({

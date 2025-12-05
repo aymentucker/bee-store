@@ -9,6 +9,11 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: 'images.unsplash.com',
       },
+      {
+        protocol: 'https',
+        hostname: 'beekeeper-store.s3.eu-north-1.amazonaws.com',
+        pathname: '/**',
+      },
     ],
   },
 };

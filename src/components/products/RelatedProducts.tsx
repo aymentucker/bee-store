@@ -1,6 +1,6 @@
 import { SectionTitle } from "@/components/ui/SectionTitle"
 import { ProductCard } from "@/components/products/ProductCard"
-import { getProductsByCategory } from "@/data/products"
+import { getProductsByCategory } from "@/lib/db-utils"
 import type { Product } from "@/data/products"
 
 interface RelatedProductsProps {
@@ -8,8 +8,9 @@ interface RelatedProductsProps {
     limit?: number;
 }
 
-export function RelatedProducts({ currentProduct, limit = 4 }: RelatedProductsProps) {
-    const relatedProducts = getProductsByCategory(currentProduct.categorySlug)
+export async function RelatedProducts({ currentProduct, limit = 4 }: RelatedProductsProps) {
+    const products = await getProductsByCategory(currentProduct.categorySlug)
+    const relatedProducts = products
         .filter(product => product.id !== currentProduct.id)
         .slice(0, limit)
 

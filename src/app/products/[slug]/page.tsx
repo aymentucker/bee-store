@@ -2,23 +2,15 @@ import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs"
 import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
 import { ProductGallery } from "@/components/products/ProductGallery"
 import { ProductSpecs } from "@/components/products/ProductSpecs"
 import { RelatedProducts } from "@/components/products/RelatedProducts"
-import { products, getProductBySlug } from "@/data/products"
-import { getCategoryBySlug } from "@/data/categories"
-import { MessageCircle, Phone } from "lucide-react"
-
-export async function generateStaticParams() {
-    return products.map((product) => ({
-        slug: product.slug,
-    }))
-}
+import { getProductBySlug, getCategoryBySlug } from "@/lib/db-utils"
+import { ProductActions } from "@/components/products/ProductActions"
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
     const { slug } = await params
-    const product = getProductBySlug(slug)
+    const product = await getProductBySlug(slug)
 
     if (!product) {
         return {
@@ -34,20 +26,41 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
 export default async function ProductPage({ params }: { params: Promise<{ slug: string }> }) {
     const { slug } = await params
-    const product = getProductBySlug(slug)
+    const product = await getProductBySlug(slug)
 
     if (!product) {
         notFound()
     }
 
-    const category = getCategoryBySlug(product.categorySlug)
+    const category = await getCategoryBySlug(product.categorySlug)
 
-    // WhatsApp configuration
-    const whatsappNumber = "966XXXXXXXXX"
-    const whatsappMessage = `مرحباً، أود الاستفسار عن المنتج: ${product.name}`
+    const jsonLd = {
+        "@context": "https://schema.org",
+        "@type": "Product",
+        "name": product.name,
+        "image": product.images[0],
+        "description": product.description,
+        "sku": product.slug,
+        "brand": {
+            "@type": "Brand",
+            "name": "كتالوج معدات النحل"
+        },
+        "offers": {
+            "@type": "Offer",
+            "url": `https://bee-web.vercel.app/products/${product.slug}`,
+            "priceCurrency": "SAR",
+            "price": product.price,
+            "availability": product.inStock ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
+            "itemCondition": product.isNew ? "https://schema.org/NewCondition" : "https://schema.org/UsedCondition"
+        }
+    }
 
     return (
         <div className="container mx-auto px-4 py-12">
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+            />
             <Breadcrumbs
                 items={[
                     { href: "/", label: "الرئيسية" },
@@ -95,35 +108,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                         </div>
                     </div>
 
-                    <div className="space-y-4 mb-8">
-                        <Button
-                            asChild
-                            size="lg"
-                            className="w-full bg-green-600 hover:bg-green-700 text-white"
-                            disabled={!product.inStock}
-                        >
-                            <a
-                                href={`https://wa.me/${whatsappNumber}?text=${encodeURIComponent(whatsappMessage)}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                            >
-                                <MessageCircle className="ml-2 h-5 w-5" />
-                                <span>اطلب عبر الواتساب</span>
-                            </a>
-                        </Button>
-
-                        <Button
-                            asChild
-                            size="lg"
-                            variant="outline"
-                            className="w-full"
-                        >
-                            <a href="tel:+966XXXXXXXXX">
-                                <Phone className="ml-2 h-5 w-5" />
-                                <span>اتصل بنا</span>
-                            </a>
-                        </Button>
-                    </div>
+                    <ProductActions product={product} />
 
                     <ProductSpecs specs={product.specs} />
                 </div>

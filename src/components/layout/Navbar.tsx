@@ -6,8 +6,12 @@ import { Menu, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { ThemeToggle } from "@/components/ui/theme-toggle"
 
+import { useSettings } from "@/lib/settings-context"
+import Image from "next/image"
+
 export function Navbar() {
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+    const { siteName, logoUrl } = useSettings()
 
     const navLinks = [
         { href: "/", label: "الرئيسية" },
@@ -22,8 +26,14 @@ export function Navbar() {
                 <div className="flex h-16 items-center justify-between">
                     {/* Logo */}
                     <Link href="/" className="flex items-center gap-2">
-                        <span className="text-2xl font-bold text-[var(--primary)]">🐝</span>
-                        <span className="text-xl font-bold">كتالوج معدات النحل</span>
+                        {logoUrl ? (
+                            <div className="relative h-10 w-10">
+                                <Image src={logoUrl} alt={siteName} fill className="object-contain" />
+                            </div>
+                        ) : (
+                            <span className="text-2xl font-bold text-[var(--primary)]">🐝</span>
+                        )}
+                        <span className="text-xl font-bold">{siteName}</span>
                     </Link>
 
                     {/* Desktop Navigation */}

@@ -1,16 +1,33 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { motion } from "framer-motion"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { SectionTitle } from "@/components/ui/SectionTitle"
-import { categories } from "@/data/categories"
 import { ArrowLeft } from "lucide-react"
+import type { Category } from "@/data/categories"
 
-// TEXT CONTENT: Section title can be edited below
 export function FeaturedCategories() {
+    const [categories, setCategories] = useState<Category[]>([])
+
+    useEffect(() => {
+        const loadCategories = async () => {
+            try {
+                const { getCategories } = await import("@/lib/db-utils")
+                const data = await getCategories()
+                setCategories(data)
+            } catch (error) {
+                console.error("Failed to load categories", error)
+            }
+        }
+        loadCategories()
+    }, [])
+
+    if (categories.length === 0) return null;
+
     return (
         <section className="py-16">
             <div className="container mx-auto px-4">

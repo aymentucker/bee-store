@@ -1,21 +1,35 @@
 "use client"
 
-import { useState, useMemo } from "react"
-import type { Metadata } from "next"
+import { useState, useMemo, useEffect } from "react"
 import { SectionTitle } from "@/components/ui/SectionTitle"
 import { ProductCard } from "@/components/products/ProductCard"
 import { ProductFilters } from "@/components/products/ProductFilters"
-import { products } from "@/data/products"
 import { Button } from "@/components/ui/button"
 
-// TEXT CONTENT: Edit page title and description
 export default function ProductsPage() {
+    const [products, setProducts] = useState<any[]>([])
+    const [loading, setLoading] = useState(true)
     const [filters, setFilters] = useState({
         category: "",
         inStock: null as boolean | null,
         search: ""
     })
     const [displayLimit, setDisplayLimit] = useState(12)
+
+    useEffect(() => {
+        const loadProducts = async () => {
+            try {
+                const { getProducts } = await import("@/lib/db-utils")
+                const data = await getProducts()
+                setProducts(data)
+            } catch (error) {
+                console.error("Failed to load products", error)
+            } finally {
+                setLoading(false)
+            }
+        }
+        loadProducts()
+    }, [])
 
     const filteredProducts = useMemo(() => {
         return products.filter((product) => {
@@ -33,15 +47,19 @@ export default function ProductsPage() {
                 return (
                     product.name.toLowerCase().includes(searchLower) ||
                     product.description.toLowerCase().includes(searchLower) ||
-                    product.tags.some(tag => tag.toLowerCase().includes(searchLower))
+                    product.tags.some((tag: string) => tag.toLowerCase().includes(searchLower))
                 )
             }
             return true
         })
-    }, [filters])
+    }, [filters, products])
 
     const displayedProducts = filteredProducts.slice(0, displayLimit)
     const hasMore = displayLimit < filteredProducts.length
+
+    if (loading) {
+        return <div className="container mx-auto px-4 py-12 text-center">جاري التحميل...</div>
+    }
 
     return (
         <div className="container mx-auto px-4 py-12">

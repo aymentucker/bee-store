@@ -1,13 +1,28 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 import { SectionTitle } from "@/components/ui/SectionTitle"
 import { ProductCard } from "@/components/products/ProductCard"
-import { getFeaturedProducts } from "@/data/products"
+import { Product } from "@/data/products"
 
-// TEXT CONTENT: Section title can be edited below
 export function FeaturedProducts() {
-    const featuredProducts = getFeaturedProducts(8)
+    const [featuredProducts, setFeaturedProducts] = useState<Product[]>([])
+
+    useEffect(() => {
+        const loadProducts = async () => {
+            try {
+                const { getFeaturedProducts } = await import("@/lib/db-utils")
+                const data = await getFeaturedProducts(8)
+                setFeaturedProducts(data)
+            } catch (error) {
+                console.error("Failed to load featured products", error)
+            }
+        }
+        loadProducts()
+    }, [])
+
+    if (featuredProducts.length === 0) return null;
 
     return (
         <section className="py-16 bg-[var(--muted)]/30">
